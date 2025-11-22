@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babe Lyric Finder</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for high-contrast theme and font */
+        :root {
+            --color-bg-light: #ffffff;
+            --color-text-light: #1f2937; /* Dark Gray */
+            --color-primary: #FF3366; /* Bright Pink */
+            --color-accent: #00CCFF; /* Bright Cyan */
+            --color-card-light: #f3f4f6;
+            --color-shadow-light: rgba(0, 0, 0, 0.05);
+        }
+        .dark {
+            --color-bg-dark: #111827; /* Dark Blue/Black */
+            --color-text-dark: #f9fafb; /* Off White */
+            --color-primary: #FF3366;
+            --color-accent: #00CCFF;
+            --color-card-dark: #1f2937;
+            --color-shadow-dark: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Set defaults for light mode */
+        .light-mode {
+            background-color: var(--color-bg-light);
+            color: var(--color-text-light);
+        }
+
+        .dark-mode {
+            background-color: var(--color-bg-dark);
+            color: var(--color-text-dark);
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+            font-weight: 700;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn-primary:hover {
+            background-color: #e62d5c; /* Darker pink */
+            transform: translateY(-1px);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .interactive-card {
+            box-shadow: 0 4px 6px -1px var(--color-shadow-light), 0 2px 4px -2px var(--color-shadow-light);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .dark-mode .interactive-card {
+            box-shadow: 0 4px 6px -1px var(--color-shadow-dark), 0 2px 4px -2px var(--color-shadow-dark);
+            background-color: var(--color-card-dark);
+        }
+        .light-mode .interactive-card {
+            background-color: var(--color-card-light);
+        }
+
+        /* High contrast focus styles */
+        input:focus, textarea:focus, button:focus {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body class="light-mode">
+
+    <!-- Main Application Container -->
+    <div id="app" class="min-h-screen p-4 sm:p-8">
+
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8 border-b-2 pb-4 dark:border-gray-700 border-gray-200">
+            <!-- Title -->
+            <h1 class="text-3xl sm:text-4xl font-black tracking-tight">
+                <span style="color: var(--color-primary);">BABE</span> 
+                <span style="color: var(--color-accent);">LYRIC</span> 
+                <span style="color: var(--color-primary);">FINDER</span>
+            </h1>
+            
+            <!-- Button Group (Download and Theme Toggle) -->
+            <div class="flex items-center space-x-3">
+                <!-- NEW: Download Button -->
+                <button id="downloadButton" class="px-3 py-1.5 text-sm font-semibold rounded-full transition duration-300 hover:opacity-90" style="background-color: var(--color-accent); color: white;">
+                    Download App
+                </button>
+                
+                <!-- Theme Toggle -->
+                <button id="themeToggle" class="p-2 rounded-full transition duration-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <!-- Moon Icon (Initial state - Light Mode) -->
+                    <svg id="moonIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 12 12 0 1020.354 15.354z"></path></svg>
+                    <!-- Sun Icon (Dark Mode) -->
+                    <svg id="sunIcon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Search Interface Card -->
+        <div class="interactive-card rounded-xl p-6 md:p-10 mx-auto max-w-2xl">
+            <h2 class="text-2xl font-bold mb-6 text-center">What are you looking for?</h2>
+
+            <!-- Search Type Toggles -->
+            <div class="flex justify-center space-x-4 mb-6">
+                <button id="searchTypeSong" data-type="songName" class="px-4 py-2 rounded-full font-bold transition-all border-2 border-transparent"
+                    style="background-color: var(--color-primary); color: white;">
+                    Song Title & Artist
+                </button>
+                <button id="searchTypeLyrics" data-type="lyricsSnippet" class="px-4 py-2 rounded-full font-bold transition-all border-2"
+                    style="border-color: var(--color-accent); color: var(--color-accent); background-color: transparent;">
+                    Lyrics Snippet
+                </button>
+            </div>
+
+            <!-- Search Input Area -->
+            <div class="space-y-4">
+                <textarea id="searchInput" rows="3" class="w-full p-4 rounded-lg border-2 text-xl font-bold transition-colors dark:border-gray-600 dark:bg-gray-800 focus:ring-2"
+                    placeholder="Enter Song Title or Lyrics..."
+                    style="border-color: var(--color-accent); resize: vertical; color: var(--color-text-dark); background-color: var(--color-bg-light);"
+                ></textarea>
+
+                <button id="searchButton" class="btn-primary w-full py-3 rounded-xl shadow-lg hover:shadow-xl flex items-center justify-center text-lg">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    Search Database
+                </button>
+            </div>
+        </div>
+
+        <!-- Status and Results Area -->
+        <div class="mt-8 mx-auto max-w-2xl">
+            <h3 class="text-xl font-extrabold mb-4 border-b-2 pb-2" style="border-color: var(--color-accent);">
+                Results:
+            </h3>
+
+            <div id="loadingIndicator" class="hidden text-center p-6 rounded-lg text-lg font-semibold" style="color: var(--color-primary);">
+                <svg class="animate-spin h-6 w-6 mr-3 inline" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Searching the music universe...
+            </div>
+
+            <div id="resultsContainer" class="space-y-4">
+                <!-- Results will be injected here -->
+            </div>
+
+            <!-- Message Box for Errors/No Results -->
+            <div id="messageBox" class="hidden interactive-card p-6 rounded-xl text-center font-bold mt-6">
+                <!-- Error messages will be placed here -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Global variables provided by the Canvas environment
+        const apiKey = ""; // API key is handled by the Canvas environment if empty
+        const apiUrlBase = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
+
+        // --- UI Element References ---
+        const body = document.body;
+        const themeToggle = document.getElementById('themeToggle');
+        const downloadButton = document.getElementById('downloadButton'); // NEW reference
+        const moonIcon = document.getElementById('moonIcon');
+        const sunIcon = document.getElementById('sunIcon');
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const searchTypeSong = document.getElementById('searchTypeSong');
+        const searchTypeLyrics = document.getElementById('searchTypeLyrics');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const messageBox = document.getElementById('messageBox');
+
+        // --- State ---
+        let searchType = 'songName'; // 'songName' or 'lyricsSnippet'
+        let currentTheme = 'light';
+
+        // --- Utility Functions ---
+
+        /**
+         * Implements exponential backoff for retrying API calls.
+         * @param {function} fn The function to execute (the fetch call).
+         * @param {number} maxRetries Maximum number of retries.
+         * @returns {Promise<Response>} The fetch response.
+         */
+        async function fetchWithBackoff(fn, maxRetries = 5) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fn();
+                    if (response.status !== 429) {
+                        // Success or non-rate-limit error
+                        return response;
+                    }
+                    // Handle rate limit (429) with backoff
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error; // Re-throw last error
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+            throw new Error("API call failed after multiple retries.");
+        }
+
+        /**
+         * Generates the API payload and constructs the URL for the Gemini API call.
+         * @param {string} query The user's input (song name or lyrics snippet).
+         * @param {string} type 'songName' or 'lyricsSnippet'.
+         * @returns {object} The payload for the API request.
+         */
+        function buildApiPayload(query, type) {
+            let userQuery;
+            let systemPrompt;
+
+            if (type === 'songName') {
+                // Prioritizing Musixmatch for lyrics search
+                systemPrompt = "You are a specialized music database assistant. Your task is to accurately find the lyrics for the song title and artist provided using the Google Search tool, prioritizing results from Musixmatch. Only return the full lyrics in a single block of text. Start the response with 'LYRICS:' and nothing else before it. If you can't find it, state 'NOT FOUND:'.";
+                userQuery = `Find the complete, full, and accurate lyrics for the song titled: "${query}" from Musixmatch.`;
+            } else { // lyricsSnippet
+                // Prioritizing Musixmatch for song identification
+                systemPrompt = "You are a specialized music database assistant. Your task is to identify the song using the lyrics snippet provided, using the Google Search tool, prioritizing Musixmatch as the source. Return the result in the following exact format: TITLE: [Song Title] | ARTIST: [Artist Name] | ALBUM: [Album Name]. If you can't find a match, state 'NOT FOUND:'.";
+                userQuery = `Identify the song, artist, and album that contains the lyrics snippet: "${query}" using Musixmatch.`;
+            }
+
+            return {
+                contents: [{ parts: [{ text: userQuery }] }],
+                tools: [{ "google_search": {} }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+        }
+        
+        /**
+         * Triggers the download of the current page content as an HTML file.
+         * @param {string} filename The desired filename.
+         * @param {string} content The content of the file (HTML source).
+         */
+        function downloadFile(filename, content) {
+            const blob = new Blob([content], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url); // Clean up the object URL
+        }
+
+
+        // --- Rendering Functions ---
+
+        /**
+         * Toggles the active search type button styling.
+         * @param {string} type 'songName' or 'lyricsSnippet'.
+         */
+        function toggleSearchType(type) {
+            searchType = type;
+            const activeStyle = `background-color: var(--color-primary); color: white; border-color: var(--color-primary);`;
+            const inactiveStyle = `border-color: var(--color-accent); color: var(--color-accent); background-color: transparent;`;
+
+            if (type === 'songName') {
+                searchTypeSong.style.cssText = activeStyle;
+                searchTypeLyrics.style.cssText = inactiveStyle;
+                searchInput.placeholder = "Enter Song Title and Artist (e.g., 'Bohemian Rhapsody Queen')";
+            } else {
+                searchTypeLyrics.style.cssText = activeStyle;
+                searchTypeSong.style.cssText = inactiveStyle;
+                searchInput.placeholder = "Enter a snippet of the lyrics (e.g., 'Is this the real life? Is this just fantasy?')";
+            }
+        }
+
+        /**
+         * Displays the generated content and citation sources.
+         * @param {string} text The generated text from the LLM.
+         * @param {Array<Object>} sources Array of citation objects.
+         */
+        function renderResults(text, sources) {
+            resultsContainer.innerHTML = '';
+            messageBox.classList.add('hidden');
+
+            // Check for NOT FOUND marker
+            if (text.trim().startsWith('NOT FOUND:')) {
+                displayMessage("Sorry, we couldn't find a match for that query in the music universe.", 'failure');
+                return;
+            }
+
+            let htmlContent = '';
+            let title = 'Search Result';
+
+            if (searchType === 'songName' && text.startsWith('LYRICS:')) {
+                // Displaying Lyrics
+                const lyrics = text.substring('LYRICS:'.length).trim();
+                title = 'Full Song Lyrics';
+                // Convert double newlines to paragraph breaks, single to line breaks
+                const formattedLyrics = lyrics.replace(/\n\n/g, '</p><p class="mt-4">').replace(/\n/g, '<br>');
+
+                htmlContent = `
+                    <p class="text-xs font-bold uppercase mb-2" style="color: var(--color-primary);">Full Lyrics</p>
+                    <div class="interactive-card p-6 rounded-xl overflow-auto max-h-[60vh] font-medium text-lg light-mode:text-gray-800 dark-mode:text-gray-200 whitespace-pre-wrap">
+                        <p class="mb-0">${formattedLyrics}</p>
+                    </div>
+                `;
+            } else if (searchType === 'lyricsSnippet') {
+                // Displaying Song/Artist/Album Info (structured key-value pairs)
+                const parts = text.split('|').map(p => p.trim());
+                title = 'Song Identification';
+
+                let songInfoHTML = '';
+                parts.forEach(part => {
+                    const [key, value] = part.split(':').map(s => s.trim());
+                    if (key && value) {
+                        const displayKey = key.toUpperCase();
+                        songInfoHTML += `
+                            <div class="flex flex-col sm:flex-row sm:items-center py-2 border-b last:border-b-0 dark:border-gray-700 border-gray-300">
+                                <span class="font-bold text-sm sm:w-1/4" style="color: var(--color-primary);">${displayKey}:</span>
+                                <span class="text-lg font-extrabold sm:w-3/4">${value}</span>
+                            </div>
+                        `;
+                    }
+                });
+
+                htmlContent = `
+                    <p class="text-xs font-bold uppercase mb-2" style="color: var(--color-primary);">Song Identified</p>
+                    <div class="interactive-card p-6 rounded-xl space-y-2">
+                        ${songInfoHTML}
+                    </div>
+                `;
+            } else {
+                 // Fallback for unexpected format
+                 displayMessage('The search returned data in an unexpected format. Try a different query.', 'failure');
+                 return;
+            }
+
+
+            // Render the main result
+            resultsContainer.innerHTML += htmlContent;
+
+            // Render Sources/Citations
+            if (sources.length > 0) {
+                const sourcesHtml = sources.map((s, index) => `
+                    <a href="${s.uri}" target="_blank" class="block text-sm truncate hover:underline" style="color: var(--color-accent);" rel="noopener noreferrer">
+                        ${index + 1}. ${s.title || s.uri}
+                    </a>
+                `).join('');
+
+                resultsContainer.innerHTML += `
+                    <div class="mt-4 p-4 rounded-lg text-xs light-mode:bg-gray-100 dark-mode:bg-gray-700">
+                        <p class="font-bold mb-2">Sources Grounded by Google Search:</p>
+                        ${sourcesHtml}
+                    </div>
+                `;
+            } else {
+                 resultsContainer.innerHTML += `
+                    <div class="mt-4 p-4 rounded-lg text-xs light-mode:bg-gray-100 dark-mode:bg-gray-700">
+                        <p class="font-bold mb-2">Sources Grounded by Google Search:</p>
+                        <p>No specific external web sources were cited for this result.</p>
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * Displays status or error messages in the dedicated box.
+         * @param {string} message The message to display.
+         * @param {string} type 'success', 'failure', or 'info'.
+         */
+        function displayMessage(message, type = 'info') {
+            messageBox.classList.remove('hidden', 'light-mode:bg-red-100', 'dark-mode:bg-red-900', 'light-mode:text-red-800', 'dark-mode:text-red-200');
+            messageBox.classList.add('light-mode:bg-yellow-100', 'dark-mode:bg-yellow-900', 'light-mode:text-yellow-800', 'dark-mode:text-yellow-200'); // Default info color
+
+            if (type === 'failure') {
+                messageBox.classList.remove('light-mode:bg-yellow-100', 'dark-mode:bg-yellow-900', 'light-mode:text-yellow-800', 'dark-mode:text-yellow-200');
+                messageBox.classList.add('light-mode:bg-red-100', 'dark-mode:bg-red-900', 'light-mode:text-red-800', 'dark-mode:text-red-200');
+            }
+
+            messageBox.innerHTML = `<p>${message}</p>`;
+        }
+
+        // --- API Interaction Logic ---
+
+        async function performSearch() {
+            const query = searchInput.value.trim();
+            if (!query) {
+                displayMessage("Please enter a song title/artist or a lyrics snippet to search.", 'info');
+                return;
+            }
+
+            resultsContainer.innerHTML = '';
+            messageBox.classList.add('hidden');
+            loadingIndicator.classList.remove('hidden');
+            searchButton.disabled = true;
+            searchButton.innerText = "Searching...";
+
+            const payload = buildApiPayload(query, searchType);
+            const apiUrl = `${apiUrlBase}?key=${apiKey}`;
+
+            try {
+                const response = await fetchWithBackoff(() => fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }));
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+
+                if (!candidate || !candidate.content?.parts?.[0]?.text) {
+                    throw new Error("API response was invalid or empty.");
+                }
+
+                const text = candidate.content.parts[0].text;
+                let sources = [];
+
+                const groundingMetadata = candidate.groundingMetadata;
+                if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                    sources = groundingMetadata.groundingAttributions
+                        .map(attribution => ({
+                            uri: attribution.web?.uri,
+                            title: attribution.web?.title,
+                        }))
+                        .filter(source => source.uri);
+                }
+
+                renderResults(text, sources);
+
+            } catch (error) {
+                console.error("Search failed:", error);
+                displayMessage(`A critical error occurred during the search. Please check the console for details. (${error.message})`, 'failure');
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                searchButton.disabled = false;
+                searchButton.innerHTML = `<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> Search Database`;
+            }
+        }
+
+
+        // --- Event Listeners and Initialization ---
+
+        function initApp() {
+            // Set initial theme to light and update icons
+            currentTheme = 'light';
+            body.classList.remove('dark-mode');
+            body.classList.add('light-mode');
+            moonIcon.classList.remove('hidden');
+            sunIcon.classList.add('hidden');
+
+            // Initialize search type
+            toggleSearchType('songName');
+
+            // Theme Toggle Listener
+            themeToggle.addEventListener('click', () => {
+                if (currentTheme === 'light') {
+                    body.classList.remove('light-mode');
+                    body.classList.add('dark-mode');
+                    moonIcon.classList.add('hidden');
+                    sunIcon.classList.remove('hidden');
+                    currentTheme = 'dark';
+                    searchInput.style.cssText += "color: var(--color-text-dark); background-color: var(--color-card-dark);";
+                } else {
+                    body.classList.remove('dark-mode');
+                    body.classList.add('light-mode');
+                    moonIcon.classList.remove('hidden');
+                    sunIcon.classList.add('hidden');
+                    currentTheme = 'light';
+                     searchInput.style.cssText += "color: var(--color-text-light); background-color: var(--color-bg-light);";
+                }
+            });
+            
+            // Download Button Listener
+            downloadButton.addEventListener('click', () => {
+                // Use the entire current document's source code
+                const htmlContent = document.documentElement.outerHTML;
+                downloadFile('babe_lyric_finder.html', htmlContent);
+            });
+
+
+            // Search Type Listeners
+            searchTypeSong.addEventListener('click', () => toggleSearchType('songName'));
+            searchTypeLyrics.addEventListener('click', () => toggleSearchType('lyricsSnippet'));
+
+            // Search Button Listener
+            searchButton.addEventListener('click', performSearch);
+
+            // Allow Enter key to submit search
+            searchInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault(); // Prevent newline in textarea
+                    if (!searchButton.disabled) {
+                        performSearch();
+                    }
+                }
+            });
+
+            // Initial message
+            displayMessage("Select your search type and enter your query above!", 'info');
+        }
+
+        window.onload = initApp;
+
+    </script>
+</body>
+</html>
